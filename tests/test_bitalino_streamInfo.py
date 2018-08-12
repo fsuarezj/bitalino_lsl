@@ -143,6 +143,62 @@ def test_create_lsl_EEG_channels_dict2(data):
         assert ch.child_value("type") == "EEG"
         ch = ch.next_sibling()
 
+@pytest.mark.list_test
+@pytest.mark.loc_chn
+def test_locate_channel_list(data, capsys):
+    chns = [2]
+    pytest.device.create_lsl_EEG(chns)
+    with capsys.disabled():
+        pytest.device.locate_bipolar_channels({2: 'O1-P4'})
+    ch = pytest.device._info_eeg.desc().child("channels").child("channel")
+    for i in chns:
+        assert ch.child_value("label") == str(pytest.device._eeg_channels[i])
+    assert str(pytest.device._eeg_channels[2]) == 'O1-P4'
+
+@pytest.mark.list_test
+@pytest.mark.loc_chn
+def test_locate_channels_list(data):
+    chns = [0,1]
+    pytest.device.create_lsl_EEG(chns)
+    pytest.device.locate_bipolar_channels({1: 'F4-F3', 0: 'Cz-Pz'})
+    ch = pytest.device._info_eeg.desc().child("channels").child("channel")
+    labels = []
+    for i in chns:
+        labels.append(ch.child_value("label"))
+    assert labels.sort() == list(pytest.device._eeg_channels.values()).sort()
+    assert str(pytest.device._eeg_channels[0]) == 'Cz-Pz'
+    assert str(pytest.device._eeg_channels[1]) == 'F4-F3'
+
+@pytest.mark.dict_test
+@pytest.mark.loc_chn
+def test_locate_channels_dict(data):
+    chns = {3: 'F3-F7', 1: 'C4-T4'}
+    pytest.device.create_lsl_EEG(chns)
+    chns2 = {1: 'F4-F3', 3: 'Cz-Pz'}
+    pytest.device.locate_bipolar_channels(chns2)
+    ch = pytest.device._info_eeg.desc().child("channels").child("channel")
+    labels = []
+    for i in chns:
+        labels.append(ch.child_value("label"))
+    assert labels.sort() == list(pytest.device._eeg_channels.values()).sort()
+    assert str(pytest.device._eeg_channels[3]) == 'Cz-Pz'
+    assert str(pytest.device._eeg_channels[1]) == 'F4-F3'
+
+@pytest.mark.dict_test
+@pytest.mark.loc_chn
+def test_locate_channels_dict2(data):
+    chns = {3: 'F3-F7', 1: 'C4-T4'}
+    pytest.device.create_lsl_EEG(chns)
+    pytest.device.locate_bipolar_channels({1: 'F4-F3'})
+    ch = pytest.device._info_eeg.desc().child("channels").child("channel")
+    labels = []
+    for i in chns:
+        labels.append(ch.child_value("label"))
+        ch.next_sibling()
+    assert labels.sort() == list(pytest.device._eeg_channels.values()).sort()
+    assert str(pytest.device._eeg_channels[3]) == 'F3-F7'
+    assert str(pytest.device._eeg_channels[1]) == 'F4-F3'
+
 @pytest.mark.exc_test
 @pytest.mark.int_test
 def test_create_lsl_EEG_wrong_channel():
@@ -225,3 +281,38 @@ def test_create_lsl_EEG_wrong_dict_location4(data):
     with pytest.raises(Exception) as excinfo:
         pytest.device.create_lsl_EEG({3: 'F3'})
     assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
+
+@pytest.mark.dict_test
+def test_locate_chnnels_wrong_dict(data):
+    pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
+    with pytest.raises(Exception) as excinfo:
+        pytest.device.locate_bipolar_channels({1: 'F4 F3'})
+    assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
+
+@pytest.mark.dict_test
+def test_locate_chnnels_wrong_dict2(data):
+    pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
+    with pytest.raises(Exception) as excinfo:
+        pytest.device.locate_bipolar_channels({1: 'F4'})
+    assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
+
+@pytest.mark.dict_test
+def test_locate_chnnels_wrong_dict3(data):
+    pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
+    with pytest.raises(Exception) as excinfo:
+        pytest.device.locate_bipolar_channels(['F4-F3'])
+    assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
+
+@pytest.mark.dict_test
+def test_locate_chnnels_wrong_channel(data):
+    pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
+    with pytest.raises(Exception) as excinfo:
+        pytest.device.locate_bipolar_channels({6: 'F4-F3'})
+    assert "The specified channel/s is invalid." in str(excinfo.value)
+
+@pytest.mark.dict_test
+def test_locate_chnnels_not_initialized_channel(data):
+    pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
+    with pytest.raises(Exception) as excinfo:
+        pytest.device.locate_bipolar_channels({2: 'F4-F3'})
+    assert "The specified channel has not been initialized." in str(excinfo.value)
