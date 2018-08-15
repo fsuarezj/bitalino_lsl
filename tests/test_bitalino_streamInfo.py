@@ -286,33 +286,33 @@ def test_create_lsl_EEG_wrong_dict_location4(data):
 def test_locate_chnnels_wrong_dict(data):
     pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
     with pytest.raises(Exception) as excinfo:
-        pytest.device.locate_bipolar_channels({1: 'F4 F3'})
+        pytest.device.locate_bipolar_EEG_channels({1: 'F4 F3'})
     assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
 
 @pytest.mark.dict_test
 def test_locate_chnnels_wrong_dict2(data):
     pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
     with pytest.raises(Exception) as excinfo:
-        pytest.device.locate_bipolar_channels({1: 'F4'})
+        pytest.device.locate_bipolar_EEG_channels({1: 'F4'})
     assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
 
 @pytest.mark.dict_test
 def test_locate_chnnels_wrong_dict3(data):
     pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
     with pytest.raises(Exception) as excinfo:
-        pytest.device.locate_bipolar_channels(['F4-F3'])
+        pytest.device.locate_bipolar_EEG_channels(['F4-F3'])
     assert "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)." in str(excinfo.value)
 
 @pytest.mark.dict_test
 def test_locate_chnnels_wrong_channel(data):
     pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
     with pytest.raises(Exception) as excinfo:
-        pytest.device.locate_bipolar_channels({6: 'F4-F3'})
+        pytest.device.locate_bipolar_EEG_channels({6: 'F4-F3'})
     assert "The specified channel/s is invalid." in str(excinfo.value)
 
 @pytest.mark.dict_test
 def test_locate_chnnels_not_initialized_channel(data):
     pytest.device.create_lsl_EEG({3: 'F3-F7', 1: 'C4-T4'})
     with pytest.raises(Exception) as excinfo:
-        pytest.device.locate_bipolar_channels({2: 'F4-F3'})
+        pytest.device.locate_bipolar_EEG_channels({2: 'F4-F3'})
     assert "The specified channel has not been initialized." in str(excinfo.value)
