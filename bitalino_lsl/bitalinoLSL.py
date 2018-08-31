@@ -1,8 +1,10 @@
 import bitalino
 import sys
 import time
+import threading
 #from pylsl import StreamInfo
 from pylsl import StreamInfo, StreamOutlet
+from queue import Queue
 
 def list_bitalino():
     print("Looking for BITalino devices...")
@@ -19,8 +21,53 @@ class ExceptionCode():
     WRONG_CHANNEL_LOCATION = "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)."
     WRONG_SAMPLING_RATE = "The sampling rate is defined as an integer in Hz and can be 1, 10, 100 or 1000"
 
-class BitalinoLSL(object):
+class SharedResources():
+    queue = Queue()
+    flag = True
+    flag_lock = threading.Lock()
+
+class BitaReader(threading.Thread):
     _N_SAMPLES = 100
+
+    def __init__(self, bitalino, sampling_rate, channels_keys):
+        threading.Thread.__init__(self)
+        self._bitalino = bitalino
+        self._sampling_rate = sampling_rate
+        self._channels_keys = channels_keys
+
+    def run(self):
+        self._bitalino.start(self._sampling_rate, self._channels_keys)
+        self._timestamp = time.time()
+        while True:
+            chunk = list(self._bitalino.read(self._N_SAMPLES))
+            for i in range(self._N_SAMPLES):
+                SharedResources.queue.put((chunk.pop(0), self._timestamp))
+                self._timestamp += 1.0/self._sampling_rate
+            with SharedResources.flag_lock:
+                if not SharedResources.flag:
+                    break
+
+class LSLStreamer(threading.Thread):
+    def __init__(self, outlet):
+        threading.Thread.__init__(self)
+        self._outlet = outlet
+
+    def run(self):
+        while True:
+            data, timestamp = SharedResources.queue.get()
+            self._outlet.push_sample(data[:2], timestamp)
+            dif = time.time() - timestamp
+            print(f"Tiempo = {dif:10f}")
+            with SharedResources.flag_lock:
+                if not SharedResources.flag:
+                    break
+        while not SharedResources.queue.empty():
+            data, timestamp = self.queue.get()
+            self._outlet.push_sample(data[:2], timestamp)
+            dif = time.time() - timestamp
+            print(f"Tiempo = {dif:10f}")
+
+class BitalinoLSL(object):
     _eeg_positions = [       "Fp1",          "Fp2",
                     "F7",   "F3",   "Fz",   "F4",   "F8",
             "A1",   "T3",   "C3",   "Cz",   "C4",   "T4",   "A2",
@@ -117,26 +164,12 @@ class BitalinoLSL(object):
 
     def start(self):
         self._outlet = StreamOutlet(self._info_eeg)
-        self._init_bitalino()
-
-    def _read_bitalino(self):
-        self._timestamps.append(time.time())
-        chunk = list(self._bitalino.read(self._N_SAMPLES))
-        for i in range(self._N_SAMPLES):
-            self._bitalino_data.append(chunk.pop(0))
-            self._timestamps.append(self._timestamps[-1] + 1.0/self._sampling_rate)
-
-    def _push_stream(self):
-        for i in range(self._N_SAMPLES):
-            self._outlet.push_sample(self._bitalino_data.pop(0)[:2], self._timestamps.pop(0))
-
-    def _init_bitalino(self):
-        self._bitalino.start(self._sampling_rate, list(self._eeg_channels.keys()))
-        for i in range(100):
-            ## Add threads support
-            self._read_bitalino()
-            dif = self._timestamps[-1]
-            ## Add threads support
-            self._push_stream()
-            dif = time.time() - dif
-            print(f"Tiempo = {dif:10f}")
+        self._bitaReader = BitaReader(self._bitalino, self._sampling_rate, list(self._eeg_channels.keys()))
+        self._bitaReader.daemon = True
+        self._streamer = LSLStreamer(self._outlet)
+        self._streamer.daemon = True
+        self._bitaReader.start()
+        self._streamer.start()
+        time.sleep(5)
+        with SharedResources.flag_lock:
+            SharedResources.flag = False
