@@ -41,11 +41,12 @@ class BitaReader(threading.Thread):
         while True:
             chunk = list(self._bitalino.read(self._N_SAMPLES))
             for i in range(self._N_SAMPLES):
-                SharedResources.queue.put((chunk.pop(0), self._timestamp))
+                SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
                 self._timestamp += 1.0/self._sampling_rate
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
                     break
+        print("Stop reading")
 
 class LSLStreamer(threading.Thread):
     def __init__(self, outlet):
@@ -55,17 +56,20 @@ class LSLStreamer(threading.Thread):
     def run(self):
         while True:
             data, timestamp = SharedResources.queue.get()
-            self._outlet.push_sample(data[:2], timestamp)
+            self._outlet.push_sample(data, timestamp)
+            #print(data)
             dif = time.time() - timestamp
-            print(f"Tiempo = {dif:10f}")
+            #print(f"Tiempo = {dif:10f}")
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
                     break
         while not SharedResources.queue.empty():
-            data, timestamp = self.queue.get()
-            self._outlet.push_sample(data[:2], timestamp)
+            data, timestamp = SharedResources.queue.get()
+            self._outlet.push_sample(data, timestamp)
+            #print(data)
             dif = time.time() - timestamp
-            print(f"Tiempo = {dif:10f}")
+            #print(f"Tiempos = {dif:10f}")
+        print("Stop streaming")
 
 class BitalinoLSL(object):
     _eeg_positions = [       "Fp1",          "Fp2",
@@ -162,6 +166,9 @@ class BitalinoLSL(object):
     def get_sampling_rate(self):
         return self._sampling_rate
 
+    def _set_n_samples(self, num):
+        BitaReader._N_SAMPLES = num
+
     def start(self):
         self._outlet = StreamOutlet(self._info_eeg)
         self._bitaReader = BitaReader(self._bitalino, self._sampling_rate, list(self._eeg_channels.keys()))
@@ -170,6 +177,8 @@ class BitalinoLSL(object):
         self._streamer.daemon = True
         self._bitaReader.start()
         self._streamer.start()
-        time.sleep(5)
+
+    def stop(self):
+        print("Stopping...")
         with SharedResources.flag_lock:
             SharedResources.flag = False

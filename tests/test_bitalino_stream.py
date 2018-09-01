@@ -1,6 +1,8 @@
 import pytest
 import re
 from context import bitalino_lsl
+from pylsl import StreamInlet, resolve_stream
+import time
 
 ## Marks are:
 ## dev_test: test used for developing purposes
@@ -18,7 +20,42 @@ def connect_my_bitalino(data):
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
 
 @pytest.mark.dev_test
-def test_developing_test(data, capsys):
+def test_developing_test(capsys):
     pytest.device.create_lsl_EEG({0: 'Fp1-Fp2', 1: 'T3-T5'})
     with capsys.disabled():
         pytest.device.start()
+        time.sleep(2)
+        pytest.device.stop()
+
+@pytest.mark.mock
+def test_stream(capsys, mocker):
+    pytest.device.create_lsl_EEG({0: 'Fp1-Fp2', 1: 'T3-T5'})
+    pytest.device._set_n_samples(2)
+    mocker.patch.object(pytest.device._bitalino, 'read')
+    pytest.device._bitalino.read.return_value = [[0,1,69], [0,1,70]]
+    sampling_rate = pytest.device.get_sampling_rate()
+    with capsys.disabled():
+        pytest.device.start()
+        time.sleep(1)
+        pytest.device.stop()
+        print("Heyyyyy")
+        streams = resolve_stream('type', 'EEG')
+        print("streams:")
+        print(streams)
+        inlet = StreamInlet(streams[0])
+        print(inlet)
+        datitos = inlet.pull_sample()
+        print("datitos")
+        old_sample, old_timestamp = (datitos[0], datitos[1])
+        print("He")
+    for i in range(sampling_rate - 1):
+        with capsys.disabled():
+            print(i)
+        sample, timestamp = inlet.pull_sample()
+        with capsys.disabled():
+            print(timestamp)
+        assert sample != old_sample
+        assert sample == 69 or sample == 70
+        assert timestamp == old_timestamp + 1/sampling_rate
+        old_sample = sample
+        old_timestamp = timestamp
