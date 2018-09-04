@@ -7,6 +7,8 @@ from pylsl import StreamInfo, StreamOutlet
 from queue import Queue
 
 def list_bitalino():
+    """returns a dict with detected bitalino devices where the key is the name and the value is the MAC address
+    """
     print("Looking for BITalino devices...")
     devices = bitalino.find()
     bitalinos = {}
@@ -16,17 +18,23 @@ def list_bitalino():
     return bitalinos
 
 class ExceptionCode():
+    """This class stores the Exception codes
+    """
     CHANNEL_NOT_INITIALIZED = "The specified channel has not been initialized."
     WRONG_CHANNEL = "The specified channel/s is invalid."
     WRONG_CHANNEL_LOCATION = "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)."
     WRONG_SAMPLING_RATE = "The sampling rate is defined as an integer in Hz and can be 1, 10, 100 or 1000"
 
 class SharedResources():
+    """This class stores the resources shared between threads
+    """
     queue = Queue()
     flag = True
     flag_lock = threading.Lock()
 
 class BitaReader(threading.Thread):
+    """This class is implements Lab Streaming Layer for BITalino
+    """
     _N_SAMPLES = 100
 
     def __init__(self, bitalino, sampling_rate, channels_keys):
