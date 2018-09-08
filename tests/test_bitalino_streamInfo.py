@@ -17,17 +17,17 @@ def data():
 def connect_my_bitalino(data):
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
 
-@pytest.mark.dev_test
-def test_developing_test(data, capsys):
-    pytest.device.create_lsl_EEG([4,2])
-    with capsys.disabled():
-        print(pytest.device._info_eeg.as_xml())
-        ch = pytest.device._info_eeg.desc().child("channels").child("channel")
-        for i in range(pytest.device._info_eeg.channel_count()):
-            print(ch.child_value("label"))
-            print(ch.child_value("unit"))
-            print(ch.child_value("type"))
-            ch = ch.next_sibling()
+#@pytest.mark.dev_test
+#def test_developing_test(data, capsys):
+#    pytest.device.create_lsl_EEG([4,2])
+#    with capsys.disabled():
+#        print(pytest.device._info_eeg.as_xml())
+#        ch = pytest.device._info_eeg.desc().child("channels").child("channel")
+#        for i in range(pytest.device._info_eeg.channel_count()):
+#            print(ch.child_value("label"))
+#            print(ch.child_value("unit"))
+#            print(ch.child_value("type"))
+#            ch = ch.next_sibling()
 
 @pytest.mark.int_test
 def test_create_lsl_EEG_channel_int(data, capsys):

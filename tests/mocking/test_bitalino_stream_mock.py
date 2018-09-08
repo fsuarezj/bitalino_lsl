@@ -12,55 +12,57 @@ import time
 ## list_test: test using a list as input for the channels
 ## dict_test: test using a dictionary as input for the channels
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def data():
     pytest.mac_address = "20:17:11:20:51:60"
 
-#@pytest.fixture(scope="module", autouse=True)
-#def connect_my_bitalino(data, mocker):
-#    mocker.patch.object(bitalino_lsl, 'bitalino.BITalino')
-#    pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
-
-#@pytest.mark.dev_test
-#def test_developing_test(capsys):
-    #pytest.device.create_lsl_EEG({0: 'Fp1-Fp2', 1: 'T3-T5'})
-    #sampling_rate = pytest.device.get_sampling_rate()
-    #with capsys.disabled():
-        #pytest.device.start()
-        #streams = resolve_stream('type', 'EEG')
-        #inlet = StreamInlet(streams[0])
-        #datitos = inlet.pull_sample() ### Here is the problem!!!
-        #old_sample, old_timestamp = (datitos[0], datitos[1])
-        #time.sleep(2)
-        #pytest.device.stop()
-
-@pytest.mark.mock
-def test_stream(data, capsys, mocker):
+def stream_test(mocker, channels, read_data, segs = 1):
+    # Init device
     mocker.patch.object(bitalino, 'BITalino')
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
-    channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
     pytest.device.create_lsl_EEG(channels)
-    pytest.device._set_n_samples(2)
+    len_data = len(read_data)
+    pytest.device._set_n_samples(len_data)
     mocker.patch.object(pytest.device._bitalino, 'start')
     mocker.patch.object(pytest.device._bitalino, 'read')
-    pytest.device._bitalino.read.return_value = [[0,1,69], [0,1,70]]
+    pytest.device._bitalino.read.return_value = read_data
     sampling_rate = pytest.device.get_sampling_rate()
-    with capsys.disabled():
-        pytest.device.start()
-        streams = resolve_stream('type', 'EEG')
-        inlet = StreamInlet(streams[0])
-        datitos = inlet.pull_sample() ### Here is the problem!!!
-        old_sample, old_timestamp = (datitos[0], datitos[1])
-    for i in range(sampling_rate - 1):
-        with capsys.disabled():
-            print(i)
+    stream_data = list(map(lambda x: x[1:], read_data))
+    # transpose
+    stream_data = [list(i) for i in zip(*stream_data)]
+
+    # Start streaming
+    pytest.device.start()
+    streams = resolve_stream('type', 'EEG')
+    inlet = StreamInlet(streams[0])
+    first_data = inlet.pull_sample()
+    old_sample, old_timestamp = (first_data[0], first_data[1])
+
+    # Getting the stream and asserting
+    for i in range(sampling_rate*segs):
         sample, timestamp = inlet.pull_sample()
-        now = time.time()
-        with capsys.disabled():
-            print(now - timestamp)
-        assert sample[1] != old_sample[1]
-        assert sample[1] in [69, 70]
-        assert timestamp == old_timestamp + 1/sampling_rate
+        for j in range(len(sample)):
+            assert sample[j] in stream_data[j]
+            assert timestamp == old_timestamp + 1/sampling_rate
         old_sample = sample
         old_timestamp = timestamp
+
+    # Time delay calculation
+    now = time.time()
+    dif = now - timestamp
+    print(f"Dif = {dif:10f}")
     pytest.device.stop()
+
+@pytest.mark.mock
+def test_stream1(data, capsys, mocker):
+    channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
+    output_data = [[0,1,69], [0,1,70]]
+    with capsys.disabled():
+        stream_test(mocker, channels, output_data)
+
+@pytest.mark.mock
+def test_stream2(data, capsys, mocker):
+    channels = {0: 'Fp1-Fp2'}
+    output_data = [[0,3], [0,4], [0,5], [0,6]]
+    with capsys.disabled():
+        stream_test(mocker, channels, output_data, segs = 3)

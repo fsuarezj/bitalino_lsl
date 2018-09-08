@@ -15,47 +15,33 @@ import time
 def data():
     pytest.mac_address = "20:17:11:20:51:60"
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def connect_my_bitalino(data):
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
 
-@pytest.mark.dev_test
-def test_developing_test(capsys):
-    pytest.device.create_lsl_EEG({0: 'Fp1-Fp2', 1: 'T3-T5'})
-    sampling_rate = pytest.device.get_sampling_rate()
-    with capsys.disabled():
-        pytest.device.start()
-        streams = resolve_stream('type', 'EEG')
-        inlet = StreamInlet(streams[0])
-        datitos = inlet.pull_sample() ### Here is the problem!!!
-        old_sample, old_timestamp = (datitos[0], datitos[1])
-        time.sleep(2)
-        pytest.device.stop()
-
-# TODO: Quitar Mock
-@pytest.mark.integra
-def test_stream(capsys, mocker):
-    channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
+def stream_test(channels, segs = 1):
     pytest.device.create_lsl_EEG(channels)
-    pytest.device._set_n_samples(2)
-    mocker.patch.object(pytest.device._bitalino, 'read')
-    pytest.device._bitalino.read.return_value = [[0,1,69], [0,1,70]]
     sampling_rate = pytest.device.get_sampling_rate()
-    with capsys.disabled():
-        pytest.device.start()
-        streams = resolve_stream('type', 'EEG')
-        inlet = StreamInlet(streams[0])
-        datitos = inlet.pull_sample() ### Here is the problem!!!
-        old_sample, old_timestamp = (datitos[0], datitos[1])
-    for i in range(sampling_rate - 1):
-        with capsys.disabled():
-            print(i)
+    pytest.device.start()
+    data_len = len(channels)
+    streams = resolve_stream('type', 'EEG')
+    inlet = StreamInlet(streams[0])
+    old_sample, old_timestamp = inlet.pull_sample()
+    for i in range(sampling_rate*segs - 1):
         sample, timestamp = inlet.pull_sample()
-        with capsys.disabled():
-            print(timestamp)
-        assert sample[1] != old_sample[1]
-        assert sample[1] in [69, 70]
+        assert len(sample) == data_len
         assert timestamp == old_timestamp + 1/sampling_rate
         old_sample = sample
         old_timestamp = timestamp
+
+    # Time delay calculation
+    now = time.time()
+    dif = now - timestamp
+    print(f"Dif = {dif:10f}")
     pytest.device.stop()
+
+@pytest.mark.dev_test
+def test_stream(capsys):
+    channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
+    with capsys.disabled():
+        stream_test(channels)

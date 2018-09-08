@@ -3,7 +3,7 @@ import sys
 import time
 import threading
 #from pylsl import StreamInfo
-from pylsl import StreamInfo, StreamOutlet
+from pylsl import StreamInfo, StreamOutlet, resolve_stream
 from queue import Queue
 
 def list_bitalino():
@@ -33,7 +33,7 @@ class SharedResources():
     flag_lock = threading.Lock()
 
 class BitaReader(threading.Thread):
-    """This class is implements Lab Streaming Layer for BITalino
+    """This class is the thread reading from the BITalino device
     """
     _N_SAMPLES = 100
 
@@ -57,17 +57,18 @@ class BitaReader(threading.Thread):
         print("Stop reading")
 
 class LSLStreamer(threading.Thread):
+    """This class is the thread pushing the data to the Lab Streaming Layer
+    """
     def __init__(self, outlet):
         threading.Thread.__init__(self)
         self._outlet = outlet
 
     def run(self):
+        ## This line fixes the timestamp data
+        streams = resolve_stream('type', 'EEG')
         while True:
             data, timestamp = SharedResources.queue.get()
             self._outlet.push_sample(data, timestamp)
-            #print(data)
-            dif = time.time() - timestamp
-            #print(f"Tiempo = {dif:10f}")
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
                     break
@@ -80,6 +81,8 @@ class LSLStreamer(threading.Thread):
         print("Stop streaming")
 
 class BitalinoLSL(object):
+    """This class is implements Lab Streaming Layer for BITalino
+    """
     _eeg_positions = [       "Fp1",          "Fp2",
                     "F7",   "F3",   "Fz",   "F4",   "F8",
             "A1",   "T3",   "C3",   "Cz",   "C4",   "T4",   "A2",
@@ -87,13 +90,14 @@ class BitalinoLSL(object):
                             "O1",           "O2"]
     _sampling_rate = 1000
     _eeg_channels = dict()
+    _bitalino = None
     _info_eeg = None
     _outlet = None
     _bitalino_data = []
     _timestamps = []
 
     def __init__(self, mac_address, timeout = None):
-        print("Connecting to BITalino with MAC {mac_address}")
+        print(f"Connecting to BITalino with MAC {mac_address}")
         self._bitalino = bitalino.BITalino(mac_address, timeout)
 
     def _validate_eeg_bipolar_channels_dict(self, channels):
@@ -179,6 +183,8 @@ class BitalinoLSL(object):
 
     def start(self):
         self._outlet = StreamOutlet(self._info_eeg)
+        with SharedResources.flag_lock:
+            SharedResources.flag = True
         self._bitaReader = BitaReader(self._bitalino, self._sampling_rate, list(self._eeg_channels.keys()))
         self._bitaReader.daemon = True
         self._streamer = LSLStreamer(self._outlet)
