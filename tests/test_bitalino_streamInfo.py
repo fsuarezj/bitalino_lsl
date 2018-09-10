@@ -4,7 +4,7 @@ from context import bitalino_lsl
 
 ## Marks are:
 ## dev_test: test used for developing purposes
-## exc_test: test not launching exceptions
+## exc_test: test launching exceptions
 ## int_test: test using an integer as input for the channels
 ## list_test: test using a list as input for the channels
 ## dict_test: test using a dictionary as input for the channels
