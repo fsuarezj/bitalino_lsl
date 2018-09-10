@@ -31,6 +31,7 @@ class SharedResources():
     queue = Queue()
     flag = True
     flag_lock = threading.Lock()
+    father = None
 
 class BitaReader(threading.Thread):
     """This class is the thread reading from the BITalino device
@@ -39,6 +40,7 @@ class BitaReader(threading.Thread):
 
     def __init__(self, bitalino, sampling_rate, channels_keys):
         threading.Thread.__init__(self)
+        self.shutdown_flag = threading.Event()
         self._bitalino = bitalino
         self._sampling_rate = sampling_rate
         self._channels_keys = channels_keys
@@ -46,39 +48,63 @@ class BitaReader(threading.Thread):
     def run(self):
         self._bitalino.start(self._sampling_rate, self._channels_keys)
         self._timestamp = time.time()
-        while True:
+        while not self.shutdown_flag.is_set():
             chunk = list(self._bitalino.read(self._N_SAMPLES))
-            for i in range(self._N_SAMPLES):
+            #for i in range(self._N_SAMPLES):
+            for i in chunk:
                 SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
                 self._timestamp += 1.0/self._sampling_rate
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
-                    break
+                    self.shutdown_flag.set()
+        self.stop()
+
+    def stop(self):
         print("Stop reading")
+        #threading.Thread.__stop(self)
 
 class LSLStreamer(threading.Thread):
     """This class is the thread pushing the data to the Lab Streaming Layer
     """
     def __init__(self, outlet):
         threading.Thread.__init__(self)
+        self.shutdown_flag = threading.Event()
         self._outlet = outlet
 
     def run(self):
         ## This line fixes the timestamp data
         streams = resolve_stream('type', 'EEG')
-        while True:
+        while not self.shutdown_flag.is_set():
             data, timestamp = SharedResources.queue.get()
-            self._outlet.push_sample(data, timestamp)
+            #TODO: Catch exception if data is not correct
+            try:
+                self._outlet.push_sample(data, timestamp)
+            except:
+                print(f"BAD DATA: {data}")
+                SharedResources.father.stop()
+                with SharedResources.flag_lock:
+                    SharedResources.flag = False
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
-                    break
+                    self.shutdown_flag.set()
+        self.stop()
+
+    def stop(self):
         while not SharedResources.queue.empty():
             data, timestamp = SharedResources.queue.get()
-            self._outlet.push_sample(data, timestamp)
+            try:
+                self._outlet.push_sample(data, timestamp)
+            except:
+                print(f"BAD DATA: {data}")
+                SharedResources.father.stop()
+                with SharedResources.flag_lock:
+                    SharedResources.flag = False
             #print(data)
-            dif = time.time() - timestamp
+            #dif = time.time() - timestamp
             #print(f"Tiempos = {dif:10f}")
+        print(f"BAD DATA: {data}")
         print("Stop streaming")
+        #threading.Thread.__stop(self)
 
 class BitalinoLSL(object):
     """This class is implements Lab Streaming Layer for BITalino
@@ -185,14 +211,17 @@ class BitalinoLSL(object):
         self._outlet = StreamOutlet(self._info_eeg)
         with SharedResources.flag_lock:
             SharedResources.flag = True
+        SharedResources.father = self
         self._bitaReader = BitaReader(self._bitalino, self._sampling_rate, list(self._eeg_channels.keys()))
-        self._bitaReader.daemon = True
+        #self._bitaReader.daemon = True
         self._streamer = LSLStreamer(self._outlet)
-        self._streamer.daemon = True
+        #self._streamer.daemon = True
         self._bitaReader.start()
         self._streamer.start()
 
     def stop(self):
         print("Stopping...")
+        self._bitaReader.shutdown_flag.set()
+        self._streamer.shutdown_flag.set()
         with SharedResources.flag_lock:
             SharedResources.flag = False
