@@ -72,6 +72,7 @@ class LSLStreamer(threading.Thread):
         self._outlet = outlet
 
     def run(self):
+        except_flag = False
         ## This line fixes the timestamp data
         streams = resolve_stream('type', 'EEG')
         while not self.shutdown_flag.is_set():
@@ -82,27 +83,29 @@ class LSLStreamer(threading.Thread):
             except:
                 print(f"BAD DATA: {data}")
                 SharedResources.father.stop()
+                self.shutdown_flag.set()
+                except_flag = True
                 with SharedResources.flag_lock:
                     SharedResources.flag = False
             with SharedResources.flag_lock:
                 if not SharedResources.flag:
                     self.shutdown_flag.set()
-        self.stop()
+        self.stop(except_flag)
 
-    def stop(self):
-        while not SharedResources.queue.empty():
-            data, timestamp = SharedResources.queue.get()
-            try:
-                self._outlet.push_sample(data, timestamp)
-            except:
-                print(f"BAD DATA: {data}")
-                SharedResources.father.stop()
-                with SharedResources.flag_lock:
-                    SharedResources.flag = False
-            #print(data)
-            #dif = time.time() - timestamp
-            #print(f"Tiempos = {dif:10f}")
-        print(f"BAD DATA: {data}")
+    def stop(self, except_flag = False):
+        if(not except_flag):
+            while not SharedResources.queue.empty():
+                data, timestamp = SharedResources.queue.get()
+                try:
+                    self._outlet.push_sample(data, timestamp)
+                except:
+                    print(f"BAD DATA: {data}")
+                    SharedResources.father.stop()
+                    with SharedResources.flag_lock:
+                        SharedResources.flag = False
+                #print(data)
+                #dif = time.time() - timestamp
+                #print(f"Tiempos = {dif:10f}")
         print("Stop streaming")
         #threading.Thread.__stop(self)
 
@@ -221,7 +224,12 @@ class BitalinoLSL(object):
 
     def stop(self):
         print("Stopping...")
-        self._bitaReader.shutdown_flag.set()
-        self._streamer.shutdown_flag.set()
+        if self._bitaReader.is_alive():
+            print("Padre apaga bitaReader")
+            self._bitaReader.shutdown_flag.set()
+        if self._streamer.is_alive():
+            print("Padre apaga streamer")
+            self._streamer.shutdown_flag.set()
+        print("Stopped")
         with SharedResources.flag_lock:
             SharedResources.flag = False
