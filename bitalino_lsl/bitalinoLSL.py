@@ -5,6 +5,9 @@ import threading
 #from pylsl import StreamInfo
 from pylsl import StreamInfo, StreamOutlet, resolve_stream
 from queue import Queue
+from .bitaReader import BitaReader
+from .lslStreamer import LSLStreamer
+from .sharedResources import SharedResources
 
 def list_bitalino():
     """returns a dict with detected bitalino devices where the key is the name and the value is the MAC address
@@ -24,90 +27,6 @@ class ExceptionCode():
     WRONG_CHANNEL = "The specified channel/s is invalid."
     WRONG_CHANNEL_LOCATION = "The specified channel/s is not complied with 10-20 system in bipolar configuration (e.g. F7-F3)."
     WRONG_SAMPLING_RATE = "The sampling rate is defined as an integer in Hz and can be 1, 10, 100 or 1000"
-
-class SharedResources():
-    """This class stores the resources shared between threads
-    """
-    queue = Queue()
-    flag = True
-    flag_lock = threading.Lock()
-    father = None
-
-class BitaReader(threading.Thread):
-    """This class is the thread reading from the BITalino device
-    """
-    _N_SAMPLES = 100
-
-    def __init__(self, bitalino, sampling_rate, channels_keys):
-        threading.Thread.__init__(self)
-        self.shutdown_flag = threading.Event()
-        self._bitalino = bitalino
-        self._sampling_rate = sampling_rate
-        self._channels_keys = channels_keys
-
-    def run(self):
-        self._bitalino.start(self._sampling_rate, self._channels_keys)
-        self._timestamp = time.time()
-        while not self.shutdown_flag.is_set():
-            chunk = list(self._bitalino.read(self._N_SAMPLES))
-            #for i in range(self._N_SAMPLES):
-            for i in chunk:
-                SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
-                self._timestamp += 1.0/self._sampling_rate
-            with SharedResources.flag_lock:
-                if not SharedResources.flag:
-                    self.shutdown_flag.set()
-        self.stop()
-
-    def stop(self):
-        print("Stop reading")
-        #threading.Thread.__stop(self)
-
-class LSLStreamer(threading.Thread):
-    """This class is the thread pushing the data to the Lab Streaming Layer
-    """
-    def __init__(self, outlet):
-        threading.Thread.__init__(self)
-        self.shutdown_flag = threading.Event()
-        self._outlet = outlet
-
-    def run(self):
-        except_flag = False
-        ## This line fixes the timestamp data
-        streams = resolve_stream('type', 'EEG')
-        while not self.shutdown_flag.is_set():
-            data, timestamp = SharedResources.queue.get()
-            #TODO: Catch exception if data is not correct
-            try:
-                self._outlet.push_sample(data, timestamp)
-            except:
-                print(f"BAD DATA: {data}")
-                SharedResources.father.stop()
-                self.shutdown_flag.set()
-                except_flag = True
-                with SharedResources.flag_lock:
-                    SharedResources.flag = False
-            with SharedResources.flag_lock:
-                if not SharedResources.flag:
-                    self.shutdown_flag.set()
-        self.stop(except_flag)
-
-    def stop(self, except_flag = False):
-        if(not except_flag):
-            while not SharedResources.queue.empty():
-                data, timestamp = SharedResources.queue.get()
-                try:
-                    self._outlet.push_sample(data, timestamp)
-                except:
-                    print(f"BAD DATA: {data}")
-                    SharedResources.father.stop()
-                    with SharedResources.flag_lock:
-                        SharedResources.flag = False
-                #print(data)
-                #dif = time.time() - timestamp
-                #print(f"Tiempos = {dif:10f}")
-        print("Stop streaming")
-        #threading.Thread.__stop(self)
 
 class BitalinoLSL(object):
     """This class is implements Lab Streaming Layer for BITalino
@@ -212,8 +131,8 @@ class BitalinoLSL(object):
 
     def start(self):
         self._outlet = StreamOutlet(self._info_eeg)
-        with SharedResources.flag_lock:
-            SharedResources.flag = True
+        #with SharedResources.flag_lock:
+            #SharedResources.flag = True
         SharedResources.father = self
         self._bitaReader = BitaReader(self._bitalino, self._sampling_rate, list(self._eeg_channels.keys()))
         #self._bitaReader.daemon = True
@@ -230,6 +149,14 @@ class BitalinoLSL(object):
         if self._streamer.is_alive():
             print("Padre apaga streamer")
             self._streamer.shutdown_flag.set()
-        print("Stopped")
-        with SharedResources.flag_lock:
-            SharedResources.flag = False
+#        with SharedResources.flag_lock:
+#            SharedResources.flag = False
+        print("Sacabó")
+
+    def raise_exception(self, e):
+        self.stop()
+        #time.sleep(1)
+        #raise(e)
+
+    def threads_alive(self):
+        return self._bitaReader.is_alive() and self._streamer.is_alive()
