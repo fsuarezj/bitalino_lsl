@@ -12,16 +12,41 @@ import time
 ## list_test: test using a list as input for the channels
 ## dict_test: test using a dictionary as input for the channels
 
+_TIMEOUT = 0.2
+
 @pytest.fixture(scope="module")
 def data():
     pytest.mac_address = "20:17:11:20:51:60"
 
 @pytest.yield_fixture(autouse=True)
-def run_around_tests():
+def run_around_tests(capsys):
+    with capsys.disabled():
+        print("Comenzando")
     yield
-    pytest.device.stop()
-    # Sleep before each test to avoid getting previous data
-    time.sleep(0.7)
+    with capsys.disabled():
+        print("Finalizando")
+        pytest.device.stop()
+        # Sleep before each test to avoid getting previous data
+        time.sleep(0.7)
+        print("Finalizado")
+
+class TimedOutExc(Exception):
+    pass
+
+def deadline(timeout, *args):
+    def decorate(f):
+        def handler(signum, frame):
+            raise TimedOutExc()
+
+        def new_f(*args):
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(timeout)
+            return f(*args)
+            signal.alarm(0)
+
+        new_f.__name__ = f.__name__
+        return new_f
+    return decorate
 
 #def teardown_function():
 #    """ Stop the streaming"""
@@ -53,15 +78,26 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
     stream_data = [list(i) for i in zip(*stream_data)]
 
     # Start streaming
+    print("0")
     pytest.device.start()
-    streams = resolve_stream('type', 'EEG')
-    inlet = StreamInlet(streams[0])
-    first_data = inlet.pull_sample()
-    old_sample, old_timestamp = (first_data[0], first_data[1])
+    print("0.2")
+    streams = resolve_stream(1.0, 'type', 'EEG')
+    print("0.5")
+    if(streams != []):
+        inlet = StreamInlet(streams[0])
+        first_data = inlet.pull_sample(timeout = _TIMEOUT)
+        old_sample, old_timestamp = (first_data[0], first_data[1])
+    else:
+        segs = 0
 
     # Getting the stream and asserting
     for i in range(sampling_rate*segs):
-        sample, timestamp = inlet.pull_sample()
+        if (pytest.device.threads_alive()):
+            sample, timestamp = inlet.pull_sample(timeout = _TIMEOUT)
+        else:
+            break
+        if (sample == None or old_sample == None):
+            break
         for j in range(len(sample)):
             assert sample[j] in stream_data[j]
             #index = stream_data[j].index(sample[j])
@@ -117,7 +153,8 @@ def test_stream_1e_10s_list(data, capsys, mocker):
 @pytest.mark.exc_test
 def test_stream_bad_data(data, capsys, mocker):
     """ Test launching bad data exception"""
-    channels = [0,2,5]
+    #channels = [0,2,5]
+    channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
     read_data = [[0,3], [0,4], [0,5], [0,6]]
     with capsys.disabled():
-        stream_test(mocker, channels, segs=5)
+        stream_test(mocker, channels, read_data, segs=5)
