@@ -45,7 +45,8 @@ class BitalinoLSL(object):
     _timestamps = []
 
     def __init__(self, mac_address, timeout = None):
-        print(f"Connecting to BITalino with MAC {mac_address}")
+        th_id = threading.get_ident()
+        print(f"{th_id}: Connecting to BITalino with MAC {mac_address}")
         self._bitalino = bitalino.BITalino(mac_address, timeout)
 
     def _validate_eeg_bipolar_channels_dict(self, channels):
@@ -80,7 +81,8 @@ class BitalinoLSL(object):
             aux[channels] = ""
             self._eeg_channels = aux
 
-        print("Creating LSL")
+        th_id = threading.get_ident()
+        print(f"{th_id}: Creating LSL")
         # ToDo: Replace the name for a lookup in the devices dict
         self._info_eeg = StreamInfo("BITalino", "EEG", len(list(self._eeg_channels.keys())), self._sampling_rate, 'float32', "BITalino_5160_EEG")
         self._info_eeg.desc().append_child_value("manufacturer", "BITalino")
@@ -141,22 +143,35 @@ class BitalinoLSL(object):
         self._bitaReader.start()
         self._streamer.start()
 
-    def stop(self):
-        print("Stopping...")
+    def _shut_down_threads(self):
+        th_id = threading.get_ident()
+        print(f"{th_id}: Shutting down threads...")
         if self._bitaReader.is_alive():
-            print("Padre apaga bitaReader")
+            print(f"{th_id}: Main thread shuts down bitaReader")
             self._bitaReader.shutdown_flag.set()
         if self._streamer.is_alive():
-            print("Padre apaga streamer")
+            print(f"{th_id}: Main thread shuts down streamer")
             self._streamer.shutdown_flag.set()
 #        with SharedResources.flag_lock:
 #            SharedResources.flag = False
-        print("Sacabó")
+        print(f"{th_id}: Threads shut down")
+
+    def stop(self):
+        th_id = threading.get_ident()
+        print(f"{th_id}: Stopping")
+        self._shut_down_threads()
+        print(f"{th_id}: Exception: {SharedResources.exc_info}")
+        if SharedResources.exc_info:
+            print(f"{th_id}: raising exception")
+            raise SharedResources.exc_info[1].with_traceback(SharedResources.exc_info[2])
 
     def raise_exception(self, e):
-        self.stop()
+        th_id = threading.get_ident()
+        print(f"{th_id}: Including exception in SharedResources")
+        if not SharedResources.exc_info:
+            SharedResources.exc_info = sys.exc_info()
+        self._shut_down_threads()
         #time.sleep(1)
-        #raise(e)
 
     def threads_alive(self):
         return self._bitaReader.is_alive() and self._streamer.is_alive()

@@ -7,3 +7,4 @@ class SharedResources():
     #flag = True
     #flag_lock = threading.Lock()
     father = None
+    exc_info = None

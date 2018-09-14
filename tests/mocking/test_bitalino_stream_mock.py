@@ -25,7 +25,6 @@ def run_around_tests(capsys):
     yield
     with capsys.disabled():
         print("Finalizando")
-        pytest.device.stop()
         # Sleep before each test to avoid getting previous data
         time.sleep(0.7)
         print("Finalizado")
@@ -78,11 +77,8 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
     stream_data = [list(i) for i in zip(*stream_data)]
 
     # Start streaming
-    print("0")
     pytest.device.start()
-    print("0.2")
     streams = resolve_stream(1.0, 'type', 'EEG')
-    print("0.5")
     if(streams != []):
         inlet = StreamInlet(streams[0])
         first_data = inlet.pull_sample(timeout = _TIMEOUT)
@@ -105,6 +101,7 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
             assert timestamp == old_timestamp + 1/sampling_rate
         old_sample = sample
         old_timestamp = timestamp
+    pytest.device.stop()
 
 @pytest.mark.dict_test
 def test_stream_2e_2s(data, capsys, mocker):
@@ -158,3 +155,14 @@ def test_stream_bad_data(data, capsys, mocker):
     read_data = [[0,3], [0,4], [0,5], [0,6]]
     with capsys.disabled():
         stream_test(mocker, channels, read_data, segs=5)
+
+@pytest.mark.exc_test
+def test_stream_bad_data(data, capsys, mocker):
+    """ Test launching bad data exception"""
+    #channels = [0,2,5]
+    channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
+    read_data = [[0,3], [0,4], [0,5], [0,6]]
+    with capsys.disabled():
+        with pytest.raises(Exception) as excinfo:
+            stream_test(mocker, channels, read_data, segs=5)
+        assert "length of the data must correspond to the stream's channel count." in str(excinfo.value)
