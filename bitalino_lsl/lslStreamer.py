@@ -1,5 +1,6 @@
 import threading
 from .sharedResources import SharedResources
+from queue import Empty
 
 class LSLStreamer(threading.Thread):
     """This class is the thread pushing the data to the Lab Streaming Layer
@@ -14,15 +15,18 @@ class LSLStreamer(threading.Thread):
         ## This line fixes the timestamp data
 #        streams = resolve_stream('type', 'EEG')
         while not self.shutdown_flag.is_set():
-            data, timestamp = SharedResources.queue.get()
-            #TODO: Catch exception if data is not correct
             try:
-                self._outlet.push_sample(data, timestamp)
-            except ValueError as vf:
-                print(f"BAD DATA: {data}")
-                SharedResources.father.raise_exception(vf)
-                self.shutdown_flag.set()
-                except_flag = True
+                data, timestamp = SharedResources.queue.get(timeout = 0.5)
+            except Empty as e:
+                data, timestamp = None, 0
+            if (data != None):
+                try:
+                    self._outlet.push_sample(data, timestamp)
+                except ValueError as vf:
+                    print("BAD DATA: {data}".format(data = data))
+                    SharedResources.father.raise_exception(vf)
+                    self.shutdown_flag.set()
+                    except_flag = True
 #            with SharedResources.flag_lock:
 #                if not SharedResources.flag:
 #                    self.shutdown_flag.set()
@@ -36,7 +40,7 @@ class LSLStreamer(threading.Thread):
                 try:
                     self._outlet.push_sample(data, timestamp)
                 except ValueError as vf:
-                    print(f"BAD DATA: {data}")
+                    print("BAD DATA: {data}".format(data = data))
                     SharedResources.father.raise_exception(vf)
                     #SharedResources.father.stop()
                 #print(data)

@@ -51,7 +51,7 @@ def deadline(timeout, *args):
 #    """ Stop the streaming"""
 #    pytest.device.stop()
 
-def stream_test(mocker, channels, read_data = [], segs = 1):
+def stream_test(mock, channels, read_data = [], segs = 1):
     """Main function to test the stream with several channels and data"""
     # Creates the mock read_data
     if (read_data == []):
@@ -62,19 +62,18 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
                 read_data[j].append(sample[j])
 
     # Init device
-    mocker.patch.object(bitalino, 'BITalino')
+    mock.patch.object(bitalino, 'BITalino')
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
     pytest.device.create_lsl_EEG(channels)
-    len_data = len(read_data)
-    pytest.device._set_n_samples(len_data)
-    mocker.patch.object(pytest.device._bitalino, 'start')
-    mocker.patch.object(pytest.device._bitalino, 'read')
+    mock.patch.object(pytest.device._bitalino, 'start')
+    mock.patch.object(pytest.device._bitalino, 'read')
     pytest.device._bitalino.read.return_value = read_data
     sampling_rate = pytest.device.get_sampling_rate()
-    stream_data = list(map(lambda x: x[1:], read_data))
-
-    # transpose
-    stream_data = [list(i) for i in zip(*stream_data)]
+    if (read_data != None):
+        pytest.device._set_n_samples(len(read_data))
+        stream_data = list(map(lambda x: x[1:], read_data))
+        # transpose
+        stream_data = [list(i) for i in zip(*stream_data)]
 
     # Start streaming
     pytest.device.start()
@@ -154,15 +153,17 @@ def test_stream_bad_data(data, capsys, mocker):
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
     read_data = [[0,3], [0,4], [0,5], [0,6]]
     with capsys.disabled():
-        stream_test(mocker, channels, read_data, segs=5)
-
-@pytest.mark.exc_test
-def test_stream_bad_data(data, capsys, mocker):
-    """ Test launching bad data exception"""
-    #channels = [0,2,5]
-    channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
-    read_data = [[0,3], [0,4], [0,5], [0,6]]
-    with capsys.disabled():
         with pytest.raises(Exception) as excinfo:
             stream_test(mocker, channels, read_data, segs=5)
         assert "length of the data must correspond to the stream's channel count." in str(excinfo.value)
+
+@pytest.mark.exc_test
+def test_stream_bad_reading(data, capsys, mocker):
+    """ Test launching bad data exception"""
+    #channels = [0,2,5]
+    channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
+    read_data = None
+    with capsys.disabled():
+        with pytest.raises(Exception) as excinfo:
+            stream_test(mocker, channels, read_data, segs=5)
+        assert "'NoneType' object is not iterable" in str(excinfo.value)

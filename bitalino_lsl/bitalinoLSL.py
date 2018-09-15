@@ -46,8 +46,9 @@ class BitalinoLSL(object):
 
     def __init__(self, mac_address, timeout = None):
         th_id = threading.get_ident()
-        print(f"{th_id}: Connecting to BITalino with MAC {mac_address}")
+        print("{th_id}: Connecting to BITalino with MAC {mac_address}".format(th_id = th_id, mac_address = mac_address))
         self._bitalino = bitalino.BITalino(mac_address, timeout)
+        SharedResources()
 
     def _validate_eeg_bipolar_channels_dict(self, channels):
        for i in list(channels.keys()):
@@ -82,7 +83,7 @@ class BitalinoLSL(object):
             self._eeg_channels = aux
 
         th_id = threading.get_ident()
-        print(f"{th_id}: Creating LSL")
+        print("{th_id}: Creating LSL".format(th_id = th_id))
         # ToDo: Replace the name for a lookup in the devices dict
         self._info_eeg = StreamInfo("BITalino", "EEG", len(list(self._eeg_channels.keys())), self._sampling_rate, 'float32', "BITalino_5160_EEG")
         self._info_eeg.desc().append_child_value("manufacturer", "BITalino")
@@ -145,29 +146,29 @@ class BitalinoLSL(object):
 
     def _shut_down_threads(self):
         th_id = threading.get_ident()
-        print(f"{th_id}: Shutting down threads...")
+        print("{th_id}: Shutting down threads...".format(th_id = th_id))
         if self._bitaReader.is_alive():
-            print(f"{th_id}: Main thread shuts down bitaReader")
+            print("{th_id}: Main thread shuts down bitaReader".format(th_id = th_id))
             self._bitaReader.shutdown_flag.set()
         if self._streamer.is_alive():
-            print(f"{th_id}: Main thread shuts down streamer")
+            print("{th_id}: Main thread shuts down streamer".format(th_id = th_id))
             self._streamer.shutdown_flag.set()
 #        with SharedResources.flag_lock:
 #            SharedResources.flag = False
-        print(f"{th_id}: Threads shut down")
+        print("{th_id}: Threads shut down".format(th_id = th_id))
 
     def stop(self):
         th_id = threading.get_ident()
-        print(f"{th_id}: Stopping")
+        print("{th_id}: Stopping".format(th_id = th_id))
         self._shut_down_threads()
-        print(f"{th_id}: Exception: {SharedResources.exc_info}")
+        print("{th_id}: Exception: {SharedResources.exc_info}".format(th_id = th_id, SharedResources = SharedResources))
         if SharedResources.exc_info:
-            print(f"{th_id}: raising exception")
+            print("{th_id}: raising exception".format(th_id = th_id))
             raise SharedResources.exc_info[1].with_traceback(SharedResources.exc_info[2])
 
     def raise_exception(self, e):
         th_id = threading.get_ident()
-        print(f"{th_id}: Including exception in SharedResources")
+        print("{th_id}: Including exception in SharedResources".format(th_id = th_id))
         if not SharedResources.exc_info:
             SharedResources.exc_info = sys.exc_info()
         self._shut_down_threads()

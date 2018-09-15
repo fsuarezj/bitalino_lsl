@@ -16,20 +16,28 @@ class BitaReader(threading.Thread):
         self._channels_keys = channels_keys
 
     def run(self):
+        except_flag = False
         self._bitalino.start(self._sampling_rate, self._channels_keys)
         self._timestamp = time.time()
         while not self.shutdown_flag.is_set():
             #TODO: Catch exception for read
-            chunk = list(self._bitalino.read(self._N_SAMPLES))
+            try:
+                data = self._bitalino.read(self._N_SAMPLES)
+                chunk = list(data)
+                for i in chunk:
+                    SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
+                    self._timestamp += 1.0/self._sampling_rate
+            except Exception as vf:
+                print("BAD READ: {data}".format(data = data))
+                SharedResources.father.raise_exception(vf)
+                self.shutdown_flag.set()
+                except_flag = True
             #for i in range(self._N_SAMPLES):
-            for i in chunk:
-                SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
-                self._timestamp += 1.0/self._sampling_rate
             #with SharedResources.flag_lock:
                 #if not SharedResources.flag:
                     #self.shutdown_flag.set()
-        self.stop()
+        self.stop(except_flag)
 
-    def stop(self):
+    def stop(self, except_flag = False):
         print("Stop reading")
         #threading.Thread.__stop(self)
