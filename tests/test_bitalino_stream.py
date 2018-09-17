@@ -37,7 +37,7 @@ def stream_test(channels, segs = 1):
     # Time delay calculation
     now = time.time()
     dif = now - timestamp
-    print(f"Dif = {dif:10f}")
+    print("Dif = {dif:10f}".format(dif = dif))
     pytest.device.stop()
 
 @pytest.mark.dev_test
