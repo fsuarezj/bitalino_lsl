@@ -58,6 +58,18 @@ class BitalinoLSL(object):
         SharedResources()
 
     def _validate_eeg_bipolar_channels_dict(self, channels):
+        """Private method to validate the channels dictionary
+
+        This method validates if the keys in the dictionary are in the way
+        Str1 + "-" Str2 where Str1 and Str2 are elements of the array _eeg_positions,
+        i.e. are valid positions in the 10-20 system. It also validates if the values
+        in the dictionary are valid channels for BITalino, i.e. are int numbers
+        between 0 and 5 corresponding to the 6 analog channels of BITalino. If the
+        channels dictionray is not valid the method raises an exception with the
+        appropiate message.
+
+        :param channels: the channels dictionary
+        """
        for i in list(channels.keys()):
            if not i in range(6):
                raise Exception(ExceptionCode.WRONG_CHANNEL)
@@ -72,6 +84,16 @@ class BitalinoLSL(object):
                        raise Exception(ExceptionCode.WRONG_CHANNEL_LOCATION)
 
     def create_lsl_EEG(self, channels):
+        """Creates the LSL Stream Info according to the specified channels
+
+        Creates the StreamInfo object with the information specified in the
+        argument channels.
+
+        :param channels: the channels to create the StreamInfo, it can be a list
+        with the numbers of BITalino channels or a dictionary where the values
+        are the BITalino channels number (from 0 to 5) and the keys are the
+        bipolar EEG channels in the system 10-20
+        """
         aux = dict()
         if type(channels) == dict:
             self._validate_eeg_bipolar_channels_dict(channels)
@@ -102,9 +124,22 @@ class BitalinoLSL(object):
             ch.append_child_value("type", "EEG")
 
     def get_active_channels(self):
+        """Gets the active channels for the BITalino configuration
+        """
         return list(self._eeg_channels.keys())
 
     def locate_bipolar_EEG_channels(self, channels):
+        """Locates the channels in the EEG 10-20 system
+
+        This method configures the StreamInfo object with the location of the
+        channels in the EEG 10-20 system. It returns an exception if one of the
+        channels to locate has not been initialized before.
+
+        :param channels: the channels to create the StreamInfo, it can be a list
+        with the numbers of BITalino channels or a dictionary where the values
+        are the BITalino channels number (from 0 to 5) and the keys are the
+        bipolar EEG channels in the system 10-20
+        """
         if type(channels) == dict:
             self._validate_eeg_bipolar_channels_dict(channels)
         else:
@@ -129,17 +164,34 @@ class BitalinoLSL(object):
             ch.append_child_value("type", "EEG")
 
     def set_sampling_rate(self, sampling_rate):
+        """Set the sampling rate of BITalino
+
+        :param sampling_rate: this param is the sampling rate in Hz, it can only
+        be set to 1, 10, 100 or 1000
+        """
         if sampling_rate not in [1, 10, 100, 1000]:
             raise Exception(ExceptionCode.WRONG_SAMPLING_RATE)
         self._sampling_rate = sampling_rate
 
     def get_sampling_rate(self):
+        """Get the sampling rate
+        """
         return self._sampling_rate
 
     def _set_n_samples(self, num):
+        """Set the number of samples BITalino will get in a row
+
+        :param num: the number of samples that BITalino will get in a row when
+        the method read of the bitalino object is called. By default is 100
+        """
         BitaReader._N_SAMPLES = num
 
     def start(self):
+        """Start the BITalino LML Stream
+
+        This method will init and start the threads to read from the BITalino
+        device and to send the data to the LML Stream
+        """
         self._outlet = StreamOutlet(self._info_eeg)
         #with SharedResources.flag_lock:
             #SharedResources.flag = True
@@ -152,6 +204,12 @@ class BitalinoLSL(object):
         self._streamer.start()
 
     def _shut_down_threads(self):
+        """Private method to shut down the reading and streaming threads
+
+        This private method is called to shut down the reading and streaming
+        threads. It should only be called internally, if not it could break the
+        program or failing stopping some of the threads.
+        """
         th_id = get_ident()
         print("{th_id}: Shutting down threads...".format(th_id = th_id))
         if self._bitaReader.is_alive():
@@ -165,6 +223,12 @@ class BitalinoLSL(object):
         print("{th_id}: Threads shut down".format(th_id = th_id))
 
     def stop(self):
+        """Stop the BitalinoLSL stream
+
+        This method is called to stop the BITalino reading and streaming threads,
+        if some thread raised an exception it raises it to the next level so it can
+        be catched.
+        """
         th_id = get_ident()
         print("{th_id}: Stopping".format(th_id = th_id))
         self._shut_down_threads()
@@ -174,6 +238,8 @@ class BitalinoLSL(object):
             raise_(SharedResources.exc_info[0], SharedResources.exc_info[1], SharedResources.exc_info[2])
 
     def raise_exception(self, e):
+        """Raises exceptions that occurred in the reading and streaming threads
+        """
         th_id = get_ident()
         print("{th_id}: Including exception in SharedResources".format(th_id = th_id))
         if not SharedResources.exc_info:
@@ -182,4 +248,8 @@ class BitalinoLSL(object):
         #time.sleep(1)
 
     def threads_alive(self):
+        """Check if the reading and streaming threads are alive
+
+        :returns: True if both threads are alive
+        """
         return self._bitaReader.is_alive() and self._streamer.is_alive()
