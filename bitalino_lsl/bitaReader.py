@@ -9,6 +9,16 @@ class BitaReader(threading.Thread):
     _N_SAMPLES = 100
 
     def __init__(self, bitalino, sampling_rate, channels_keys):
+        """Creates the BitaReader which starts reading from BITalino sensor
+
+        This methods creates the BitaReader configuring the bitalino sensor and
+        start reading from it.
+
+        :param bitalino: The BITalino object correspondent to the BITalino sensor
+        :param sampling_rate: The sampling rate for the bitalino sensor in Hz.
+        Will be 1, 10, 100 or 1000
+        :param channels_keys: The numbers of channels to read from
+        """
         threading.Thread.__init__(self)
         self.shutdown_flag = threading.Event()
         self._bitalino = bitalino
@@ -16,6 +26,8 @@ class BitaReader(threading.Thread):
         self._channels_keys = channels_keys
 
     def run(self):
+        """Method called to start the reading thread
+        """
         except_flag = False
         self._bitalino.start(self._sampling_rate, self._channels_keys)
         self._timestamp = time.time()
@@ -39,5 +51,7 @@ class BitaReader(threading.Thread):
         self.stop(except_flag)
 
     def stop(self, except_flag = False):
+        """Method called to stop the thread
+        """
         print("Stop reading")
         #threading.Thread.__stop(self)

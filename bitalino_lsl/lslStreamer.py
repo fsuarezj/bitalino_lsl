@@ -3,14 +3,20 @@ from .sharedResources import SharedResources
 from queue import Empty
 
 class LSLStreamer(threading.Thread):
-    """This class is the thread pushing the data to the Lab Streaming Layer
+    """This class is the thread pushing the data to the LSL Stream
     """
     def __init__(self, outlet):
+        """Creates the LSLStreamer
+
+        :param outlet: a valid LSL outlet Stream
+        """
         threading.Thread.__init__(self)
         self.shutdown_flag = threading.Event()
         self._outlet = outlet
 
     def run(self):
+        """Method called to start the streamer thread
+        """
         except_flag = False
         ## This line fixes the timestamp data
 #        streams = resolve_stream('type', 'EEG')
@@ -33,6 +39,14 @@ class LSLStreamer(threading.Thread):
         self.stop(except_flag)
 
     def stop(self, except_flag = False):
+        """Method called to stop the thread
+
+        If there was not an exception this method will empty the queue sending
+        all the data from the sensor to the LSL Stream
+
+        :param except_flag: default False. A boolean only True when an exception
+        was raised during the execution of the thread
+        """
         if(not except_flag):
             while not SharedResources.queue.empty():
                 data, timestamp = SharedResources.queue.get()
