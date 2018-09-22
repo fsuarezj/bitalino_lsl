@@ -4,6 +4,7 @@ import random
 from context import bitalino_lsl
 from pylsl import StreamInlet, resolve_stream
 import time
+import sys
 
 ## Marks are:
 ## dev_test: test used for developing purposes
@@ -23,6 +24,9 @@ def run_around_tests(capsys):
     with capsys.disabled():
         print("Comenzando")
     yield
+    # In Python 2.7 when assertion fails doesn't execute the rest of the core
+    if int(sys.version[0]) < 3:
+        pytest.device.stop()
     with capsys.disabled():
         print("Finalizando")
         # Sleep before each test to avoid getting previous data
@@ -97,13 +101,15 @@ def stream_test(mock, channels, read_data = [], segs = 1):
             assert sample[j] in stream_data[j]
             #index = stream_data[j].index(sample[j])
             #assert stream_data[j][index - 1] == old_sample[j]
-            assert timestamp == old_timestamp + 1/sampling_rate
+            #print("old = {old:6.4f}".format(old = old_timestamp))
+            assert timestamp == old_timestamp + 1.0/sampling_rate
         old_sample = sample
         old_timestamp = timestamp
     pytest.device.stop()
 
 @pytest.mark.dict_test
 @pytest.mark.mock_test
+@pytest.mark.probando
 def test_stream_2e_2s(data, capsys, mocker):
     """ Test with two mocked electrodes and two samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}

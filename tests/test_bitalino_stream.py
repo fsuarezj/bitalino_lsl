@@ -34,7 +34,7 @@ def stream_test(channels, segs = 1):
     for i in range(sampling_rate*segs - 1):
         sample, timestamp = inlet.pull_sample()
         assert len(sample) == data_len
-        assert timestamp == old_timestamp + 1/sampling_rate
+        assert timestamp == old_timestamp + 1.0/sampling_rate
         old_sample = sample
         old_timestamp = timestamp
 
