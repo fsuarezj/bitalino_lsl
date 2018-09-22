@@ -25,7 +25,7 @@ class LSLStreamer(threading.Thread):
                 data, timestamp = SharedResources.queue.get(timeout = 0.5)
             except Empty as e:
                 data, timestamp = None, 0
-            if (type(data) != 'NoneType'):
+            if (type(data) != type(None)):
                 try:
                     self._outlet.push_sample(data, timestamp)
                 except ValueError as vf:

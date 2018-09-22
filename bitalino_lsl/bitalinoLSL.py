@@ -239,8 +239,10 @@ class BitalinoLSL(object):
         self._shut_down_threads()
         print("{th_id}: Exception: {SharedResources.exc_info}".format(th_id = th_id, SharedResources = SharedResources))
         if SharedResources.exc_info:
+            temp_exc_info = SharedResources.exc_info
+            SharedResources.exc_info = None
             print("{th_id}: raising exception".format(th_id = th_id))
-            raise_(SharedResources.exc_info[0], SharedResources.exc_info[1], SharedResources.exc_info[2])
+            raise_(temp_exc_info[0], temp_exc_info[1], temp_exc_info[2])
 
     def raise_exception(self, e):
         """Raises exceptions that occurred in the reading and streaming threads
