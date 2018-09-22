@@ -57,6 +57,11 @@ class BitalinoLSL(object):
         self._bitalino = bitalino.BITalino(mac_address, timeout)
         SharedResources()
 
+    def close(self):
+        """Closes the bluetooth or serial port socket
+        """
+        self._bitalino.close()
+
     def _validate_eeg_bipolar_channels_dict(self, channels):
         """Private method to validate the channels dictionary
 
@@ -70,7 +75,7 @@ class BitalinoLSL(object):
 
         :param channels: the channels dictionary
         """
-       for i in list(channels.keys()):
+        for i in list(channels.keys()):
            if not i in range(6):
                raise Exception(ExceptionCode.WRONG_CHANNEL)
            if type(channels[i]) != str:
