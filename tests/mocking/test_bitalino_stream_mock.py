@@ -103,6 +103,7 @@ def stream_test(mock, channels, read_data = [], segs = 1):
     pytest.device.stop()
 
 @pytest.mark.dict_test
+@pytest.mark.mock_test
 def test_stream_2e_2s(data, capsys, mocker):
     """ Test with two mocked electrodes and two samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
@@ -111,6 +112,7 @@ def test_stream_2e_2s(data, capsys, mocker):
         stream_test(mocker, channels, read_data)
 
 @pytest.mark.dict_test
+@pytest.mark.mock_test
 def test_stream_1e_4s(data, capsys, mocker):
     """ Test with one mocked electrode and four samples"""
     channels = {0: 'Fp1-Fp2'}
@@ -119,6 +121,7 @@ def test_stream_1e_4s(data, capsys, mocker):
         stream_test(mocker, channels, read_data, segs = 3)
 
 @pytest.mark.dict_test
+@pytest.mark.mock_test
 def test_stream_4e_10s(data, capsys, mocker):
     """ Test with four mocked electrodes and ten samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3', 3: 'F4-F8'}
@@ -126,6 +129,7 @@ def test_stream_4e_10s(data, capsys, mocker):
         stream_test(mocker, channels, segs=5)
 
 @pytest.mark.dict_test
+@pytest.mark.mock_test
 def test_stream_1e_10s(data, capsys, mocker):
     """ Test with one mocked electrode and ten samples"""
     channels = {1: 'T3-T5'}
@@ -133,6 +137,7 @@ def test_stream_1e_10s(data, capsys, mocker):
         stream_test(mocker, channels, segs=5)
 
 @pytest.mark.list_test
+@pytest.mark.mock_test
 def test_stream_3e_10s_list(data, capsys, mocker):
     """ Test with three mocked electrodes as a list and ten samples"""
     channels = [0,2,5]
@@ -140,6 +145,7 @@ def test_stream_3e_10s_list(data, capsys, mocker):
         stream_test(mocker, channels, segs=5)
 
 @pytest.mark.list_test
+@pytest.mark.mock_test
 def test_stream_1e_10s_list(data, capsys, mocker):
     """ Test with one mocked electrode as a list and ten samples"""
     channels = [0]
@@ -147,6 +153,7 @@ def test_stream_1e_10s_list(data, capsys, mocker):
         stream_test(mocker, channels, segs=5)
 
 @pytest.mark.exc_test
+@pytest.mark.mock_test
 def test_stream_bad_data(data, capsys, mocker):
     """ Test launching bad data exception"""
     #channels = [0,2,5]
@@ -158,6 +165,7 @@ def test_stream_bad_data(data, capsys, mocker):
         assert "length of the data must correspond to the stream's channel count." in str(excinfo.value)
 
 @pytest.mark.exc_test
+@pytest.mark.mock_test
 def test_stream_bad_reading(data, capsys, mocker):
     """ Test launching bad data exception"""
     #channels = [0,2,5]

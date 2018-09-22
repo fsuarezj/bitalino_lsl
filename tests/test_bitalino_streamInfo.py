@@ -1,6 +1,7 @@
 import pytest
 import re
 from context import bitalino_lsl
+import time
 
 ## Marks are:
 ## dev_test: test used for developing purposes
@@ -13,9 +14,13 @@ from context import bitalino_lsl
 def data():
     pytest.mac_address = "20:17:11:20:51:60"
 
-@pytest.fixture(scope="session", autouse=True)
-def connect_my_bitalino(data):
+@pytest.fixture(scope="module", autouse=True)
+def connect_my_bitalino(data, request):
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
+    def end():
+        pytest.device.close()
+        time.sleep(1)
+    request.addfinalizer(end)
 
 #@pytest.mark.dev_test
 #def test_developing_test(data, capsys):
@@ -149,7 +154,7 @@ def test_locate_channel_list(data, capsys):
     chns = [2]
     pytest.device.create_lsl_EEG(chns)
     with capsys.disabled():
-        pytest.device.locate_bipolar_channels({2: 'O1-P4'})
+        pytest.device.locate_bipolar_EEG_channels({2: 'O1-P4'})
     ch = pytest.device._info_eeg.desc().child("channels").child("channel")
     for i in chns:
         assert ch.child_value("label") == str(pytest.device._eeg_channels[i])
@@ -160,7 +165,7 @@ def test_locate_channel_list(data, capsys):
 def test_locate_channels_list(data):
     chns = [0,1]
     pytest.device.create_lsl_EEG(chns)
-    pytest.device.locate_bipolar_channels({1: 'F4-F3', 0: 'Cz-Pz'})
+    pytest.device.locate_bipolar_EEG_channels({1: 'F4-F3', 0: 'Cz-Pz'})
     ch = pytest.device._info_eeg.desc().child("channels").child("channel")
     labels = []
     for i in chns:
@@ -175,7 +180,7 @@ def test_locate_channels_dict(data):
     chns = {3: 'F3-F7', 1: 'C4-T4'}
     pytest.device.create_lsl_EEG(chns)
     chns2 = {1: 'F4-F3', 3: 'Cz-Pz'}
-    pytest.device.locate_bipolar_channels(chns2)
+    pytest.device.locate_bipolar_EEG_channels(chns2)
     ch = pytest.device._info_eeg.desc().child("channels").child("channel")
     labels = []
     for i in chns:
@@ -189,7 +194,7 @@ def test_locate_channels_dict(data):
 def test_locate_channels_dict2(data):
     chns = {3: 'F3-F7', 1: 'C4-T4'}
     pytest.device.create_lsl_EEG(chns)
-    pytest.device.locate_bipolar_channels({1: 'F4-F3'})
+    pytest.device.locate_bipolar_EEG_channels({1: 'F4-F3'})
     ch = pytest.device._info_eeg.desc().child("channels").child("channel")
     labels = []
     for i in chns:

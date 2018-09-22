@@ -15,9 +15,13 @@ import time
 def data():
     pytest.mac_address = "20:17:11:20:51:60"
 
-@pytest.fixture(scope="session", autouse=True)
-def connect_my_bitalino(data):
+@pytest.fixture(scope="module", autouse=True)
+def connect_my_bitalino(data,request):
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
+    def end():
+        pytest.device.close()
+        time.sleep(1)
+    request.addfinalizer(end)
 
 def stream_test(channels, segs = 1):
     pytest.device.create_lsl_EEG(channels)
