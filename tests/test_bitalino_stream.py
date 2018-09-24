@@ -1,6 +1,7 @@
 import pytest
 import re
 from context import bitalino_lsl
+import logging
 from pylsl import StreamInlet, resolve_stream
 import time
 
@@ -41,7 +42,7 @@ def stream_test(channels, segs = 1):
     # Time delay calculation
     now = time.time()
     dif = now - timestamp
-    print("Dif = {dif:10f}".format(dif = dif))
+    logging.debug("Dif = {dif:10f}".format(dif = dif))
     pytest.device.stop()
 
 @pytest.mark.dev_test

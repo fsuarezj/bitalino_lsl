@@ -40,7 +40,7 @@ class BitaReader(threading.Thread):
                     SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
                     self._timestamp += 1.0/self._sampling_rate
             except Exception as vf:
-                print("BAD READ: {data}".format(data = data))
+                SharedResources.logger.debug("BAD READ: {data}".format(data = data))
                 SharedResources.father.raise_exception(vf)
                 self.shutdown_flag.set()
                 except_flag = True
@@ -53,5 +53,5 @@ class BitaReader(threading.Thread):
     def stop(self, except_flag = False):
         """Method called to stop the thread
         """
-        print("Stop reading")
+        SharedResources.logger.debug("Stop reading")
         #threading.Thread.__stop(self)

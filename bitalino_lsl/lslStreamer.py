@@ -29,7 +29,7 @@ class LSLStreamer(threading.Thread):
                 try:
                     self._outlet.push_sample(data, timestamp)
                 except ValueError as vf:
-                    print("BAD DATA: {data}".format(data = data))
+                    SharedResources.logger.debug("BAD DATA: {data}".format(data = data))
                     SharedResources.father.raise_exception(vf)
                     self.shutdown_flag.set()
                     except_flag = True
@@ -54,7 +54,7 @@ class LSLStreamer(threading.Thread):
                 try:
                     self._outlet.push_sample(data, timestamp)
                 except ValueError as vf:
-                    print("BAD DATA: {data}".format(data = data))
+                    SharedResources.logger.debug("BAD DATA: {data}".format(data = data))
                     SharedResources.father.raise_exception(vf)
                     #SharedResources.father.stop()
                 #print(data)
@@ -62,5 +62,5 @@ class LSLStreamer(threading.Thread):
                 #print(f"Tiempos = {dif:10f}")
         #with SharedResources.flag_lock:
             #SharedResources.flag = False
-        print("Stop streaming")
+        SharedResources.logger.debug("Stop streaming")
         #threading.Thread.__stop(self)

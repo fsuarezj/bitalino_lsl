@@ -4,6 +4,7 @@ import random
 from context import bitalino_lsl
 from pylsl import StreamInlet, resolve_stream
 import time
+import logging
 import sys
 
 ## Marks are:
@@ -17,21 +18,30 @@ _TIMEOUT = 0.2
 
 @pytest.fixture(scope="module")
 def data():
+    pytest.logger = logging.getLogger()
+    log_level = logging.INFO
+    pytest.logger.setLevel(log_level)
+    #ch = logging.StreamHandler(sys.stdout)
+    ch = logging.FileHandler("prueba.log")
+    ch.setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    pytest.logger.addHandler(ch)
     pytest.mac_address = "20:17:11:20:51:60"
 
 @pytest.yield_fixture(autouse=True)
 def run_around_tests(capsys):
     with capsys.disabled():
-        print("Comenzando")
+        pytest.logger.debug("Comenzando")
     yield
     # In Python 2.7 when assertion fails doesn't execute the rest of the core
     if int(sys.version[0]) < 3:
         pytest.device.stop()
     with capsys.disabled():
-        print("Finalizando")
+        pytest.logger.debug("Finalizando")
         # Sleep before each test to avoid getting previous data
         time.sleep(0.7)
-        print("Finalizado")
+        pytest.logger.debug("Finalizado")
 
 class TimedOutExc(Exception):
     pass
