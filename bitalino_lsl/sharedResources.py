@@ -9,7 +9,7 @@ class SharedResources():
     father = None
     exc_info = None
     logger = logging.getLogger()
-    log_level = logging.INFO
+    log_level = logging.WARNING
 
     def __init__(self):
         SharedResources.queue = Queue()
