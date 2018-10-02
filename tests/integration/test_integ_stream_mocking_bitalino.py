@@ -40,26 +40,26 @@ def run_around_tests(capsys):
     with capsys.disabled():
         pytest.logger.debug("Finalizando")
         # Sleep before each test to avoid getting previous data
-        time.sleep(0.7)
+        #time.sleep(0.7)
         pytest.logger.debug("Finalizado")
-
-class TimedOutExc(Exception):
-    pass
-
-def deadline(timeout, *args):
-    def decorate(f):
-        def handler(signum, frame):
-            raise TimedOutExc()
-
-        def new_f(*args):
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(timeout)
-            return f(*args)
-            signal.alarm(0)
-
-        new_f.__name__ = f.__name__
-        return new_f
-    return decorate
+#
+#class TimedOutExc(Exception):
+    #pass
+#
+#def deadline(timeout, *args):
+    #def decorate(f):
+        #def handler(signum, frame):
+            #raise TimedOutExc()
+#
+        #def new_f(*args):
+            #signal.signal(signal.SIGALRM, handler)
+            #signal.alarm(timeout)
+            #return f(*args)
+            #signal.alarm(0)
+#
+        #new_f.__name__ = f.__name__
+        #return new_f
+    #return decorate
 
 #def teardown_function():
 #    """ Stop the streaming"""
@@ -121,7 +121,7 @@ def stream_test(mock, channels, read_data = [], segs = 1):
 @pytest.mark.mock_test
 @pytest.mark.probando
 def test_stream_2e_2s(data, capsys, mocker):
-    """ Test with two mocked electrodes and two samples"""
+    """Testing integration with pylsl with two mocked electrodes and two samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
     read_data = [[0,1,69], [0,2,70]]
     with capsys.disabled():
@@ -130,7 +130,7 @@ def test_stream_2e_2s(data, capsys, mocker):
 @pytest.mark.dict_test
 @pytest.mark.mock_test
 def test_stream_1e_4s(data, capsys, mocker):
-    """ Test with one mocked electrode and four samples"""
+    """Testing integration with pylsl with one mocked electrode and four samples"""
     channels = {0: 'Fp1-Fp2'}
     read_data = [[0,3], [0,4], [0,5], [0,6]]
     with capsys.disabled():
@@ -139,7 +139,7 @@ def test_stream_1e_4s(data, capsys, mocker):
 @pytest.mark.dict_test
 @pytest.mark.mock_test
 def test_stream_4e_10s(data, capsys, mocker):
-    """ Test with four mocked electrodes and ten samples"""
+    """Testing integration with pylsl with four mocked electrodes and ten samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3', 3: 'F4-F8'}
     with capsys.disabled():
         stream_test(mocker, channels, segs=5)
@@ -147,7 +147,7 @@ def test_stream_4e_10s(data, capsys, mocker):
 @pytest.mark.dict_test
 @pytest.mark.mock_test
 def test_stream_1e_10s(data, capsys, mocker):
-    """ Test with one mocked electrode and ten samples"""
+    """Testing integration with pylsl with one mocked electrode and ten samples"""
     channels = {1: 'T3-T5'}
     with capsys.disabled():
         stream_test(mocker, channels, segs=5)
@@ -155,7 +155,7 @@ def test_stream_1e_10s(data, capsys, mocker):
 @pytest.mark.list_test
 @pytest.mark.mock_test
 def test_stream_3e_10s_list(data, capsys, mocker):
-    """ Test with three mocked electrodes as a list and ten samples"""
+    """Testing integration with pylsl with three mocked electrodes as a list and ten samples"""
     channels = [0,2,5]
     with capsys.disabled():
         stream_test(mocker, channels, segs=5)
@@ -163,7 +163,7 @@ def test_stream_3e_10s_list(data, capsys, mocker):
 @pytest.mark.list_test
 @pytest.mark.mock_test
 def test_stream_1e_10s_list(data, capsys, mocker):
-    """ Test with one mocked electrode as a list and ten samples"""
+    """Testing integration with pylsl with one mocked electrode as a list and ten samples"""
     channels = [0]
     with capsys.disabled():
         stream_test(mocker, channels, segs=5)
@@ -171,7 +171,7 @@ def test_stream_1e_10s_list(data, capsys, mocker):
 @pytest.mark.exc_test
 @pytest.mark.mock_test
 def test_stream_bad_data(data, capsys, mocker):
-    """ Test launching bad data exception"""
+    """Testing integration with pylsl launching bad data exception"""
     #channels = [0,2,5]
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
     read_data = [[0,3], [0,4], [0,5], [0,6]]
@@ -183,7 +183,7 @@ def test_stream_bad_data(data, capsys, mocker):
 @pytest.mark.exc_test
 @pytest.mark.mock_test
 def test_stream_bad_reading(data, capsys, mocker):
-    """ Test launching bad data exception"""
+    """Testing integration with pylsl launching bad data exception"""
     #channels = [0,2,5]
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
     read_data = None

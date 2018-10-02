@@ -14,7 +14,7 @@ def test_my_bitalino(data):
 
 def test_bitalino_no_device():
     with pytest.raises(Exception) as excinfo:
-        device = bitalino_lsl.BitalinoLSL("23:12:14:A0:E1:69")
+        device = bitalino_lsl.BitalinoLSL("FF:FF:FF:FF:FF:FF")
         device.close()
     assert "Host is down" in str(excinfo.value)
 
