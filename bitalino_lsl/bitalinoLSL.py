@@ -53,6 +53,11 @@ class BitalinoLSL(object):
     _timestamps = []
 
     def __init__(self, mac_address, timeout = None):
+        """Constructor connects with BITalino device through bluetooth
+
+        :param mac_address: MAC Address of the BITalino device
+        :param timeout: defines a timeout for the connection
+        """
         th_id = get_ident()
         SharedResources.logger.info("{th_id}: Connecting to BITalino with MAC {mac_address}".format(th_id = th_id, mac_address = mac_address))
         self._bitalino = bitalino.BITalino(mac_address, timeout)
@@ -95,10 +100,7 @@ class BitalinoLSL(object):
         Creates the StreamInfo object with the information specified in the
         argument channels.
 
-        :param channels: the channels to create the StreamInfo, it can be a list
-        with the numbers of BITalino channels or a dictionary where the values
-        are the BITalino channels number (from 0 to 5) and the keys are the
-        bipolar EEG channels in the system 10-20
+        :param channels: the channels to create the StreamInfo, it can be a list with the numbers of BITalino channels or a dictionary where the values are the BITalino channels number (from 0 to 5) and the keys are the bipolar EEG channels in the system 10-20
         """
         aux = dict()
         if type(channels) == dict:
@@ -141,10 +143,7 @@ class BitalinoLSL(object):
         channels in the EEG 10-20 system. It returns an exception if one of the
         channels to locate has not been initialized before.
 
-        :param channels: the channels to create the StreamInfo, it can be a list
-        with the numbers of BITalino channels or a dictionary where the values
-        are the BITalino channels number (from 0 to 5) and the keys are the
-        bipolar EEG channels in the system 10-20
+        :param channels: the channels to create the StreamInfo, it can be a list with the numbers of BITalino channels or a dictionary where the values are the BITalino channels number (from 0 to 5) and the keys are the bipolar EEG channels in the system 10-20
         """
         if type(channels) == dict:
             self._validate_eeg_bipolar_channels_dict(channels)
@@ -172,8 +171,7 @@ class BitalinoLSL(object):
     def set_sampling_rate(self, sampling_rate):
         """Set the sampling rate of BITalino
 
-        :param sampling_rate: this param is the sampling rate in Hz, it can only
-        be set to 1, 10, 100 or 1000
+        :param sampling_rate: this param is the sampling rate in Hz, it can only be set to 1, 10, 100 or 1000
         """
         if sampling_rate not in [1, 10, 100, 1000]:
             raise Exception(ExceptionCode.WRONG_SAMPLING_RATE)

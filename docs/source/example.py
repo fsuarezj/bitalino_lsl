@@ -1,25 +1,9 @@
-# BITalino-lsl
-
-A python module called `bitalino-lsl` to stream BITalino data though the Lab Streaming Layer (LSL). This module gets data from the [BITalino](www.bitalino.com) device through the [bitalino python api](https://github.com/BITalinoWorld/revolution-python-api) and uses the [Lab Stream Layer](https://github.com/sccn/labstreaminglayer) to stream the data.
-
-The module should work with python versions >= 2.7 although it has only been tested for:
-* Python 2.7.15
-* Python 3.6.5
-
-## Getting started
-
-### Installation
-`pip install bitalino_lsl`
-
-### Example
-
-~~~python
 import bitalino_lsl
 from pylsl import StreamInlet, resolve_stream
 import time
 
 # MAC address of the BITalino device
-MAC_ADDRESS_BITALINO_DEVICE = "20:17:11:1A:2B:3C"
+MAC_ADDRESS_BITALINO_DEVICE = "20:17:11:20:51:60"
 
 # List with channels of the BITalino device to be streamed to the LSL
 # This channels can be specified as a list or as a dictionary with their
@@ -51,10 +35,3 @@ device.stop()
 
 # Close the connection with the BITalino device
 device.close()
-~~~
-
-## Documentation
-Documentation is available [here](myurl.com)
-
-## License
-This project is licensed under the [GNU GPL v3](LICENSE.md)

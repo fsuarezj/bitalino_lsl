@@ -44,8 +44,7 @@ class LSLStreamer(threading.Thread):
         If there was not an exception this method will empty the queue sending
         all the data from the sensor to the LSL Stream
 
-        :param except_flag: default False. A boolean only True when an exception
-        was raised during the execution of the thread
+        :param except_flag: default False. A boolean only True when an exception was raised during the execution of the thread
         """
         if(not except_flag):
             while not SharedResources.queue.empty():

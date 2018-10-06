@@ -10,6 +10,8 @@ Welcome to BITalino-lsl's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro
+   api
 
 
 Indices and tables
