@@ -3,7 +3,6 @@ atomicwrites==1.2.1
 attrs==18.2.0
 Babel==2.6.0
 bitalino==1.2.1
--e git+bitalino_lsl@e5eb187aae9c0158d12a953fd209bc55a8467803#egg=bitalino_lsl
 bleach==3.0.0
 certifi==2018.8.24
 cffi==1.11.5
