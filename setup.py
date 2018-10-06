@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="bitalino-lsl",
     version="0.0.3",
-    author="Fernando Suárez Jiménez",
+    author="Fernando Suarez Jimenez",
     author_email="fsuarezj@gmail.com",
     description="Python module to stream BITalino data though the Lab Streaming Layer (LSL)",
     #long_description=long_description,
