@@ -40,8 +40,8 @@ device.start()
 # Get the Stream to read the data from
 inlet = StreamInlet(resolve_stream('type', 'EEG')[0])
 
-# Read the BITalino data for 10 seconds
-t_end = time.time() + 10
+# Read the BITalino data for 5 seconds
+t_end = time.time() + 5
 while time.time() < t_end:
   sample, timestamp = inlet.pull_sample()
   print(sample)

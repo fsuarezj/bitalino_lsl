@@ -13,9 +13,15 @@ setuptools.setup(
     #long_description_content_type="text/markdown",
     url="https://github.com/fsuarezj/bitalino-lsl",
     packages=setuptools.find_packages(),
+    install_requires=[
+        'bitalino',
+        'future',
+        'pylsl',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GPL3 License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
     ],
 )

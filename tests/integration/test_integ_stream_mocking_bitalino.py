@@ -65,7 +65,7 @@ def run_around_tests(capsys):
 #    """ Stop the streaming"""
 #    pytest.device.stop()
 
-def stream_test(mock, channels, read_data = [], segs = 1):
+def stream_test(mocker, channels, read_data = [], segs = 1):
     """Main function to test the stream with several channels and data"""
     # Creates the mock read_data
     if (read_data == []):
@@ -76,11 +76,11 @@ def stream_test(mock, channels, read_data = [], segs = 1):
                 read_data[j].append(sample[j])
 
     # Init device
-    mock.patch.object(bitalino, 'BITalino')
+    mocker.patch.object(bitalino, 'BITalino')
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
     pytest.device.create_lsl_EEG(channels)
-    mock.patch.object(pytest.device._bitalino, 'start')
-    mock.patch.object(pytest.device._bitalino, 'read')
+    mocker.patch.object(pytest.device._bitalino, 'start')
+    mocker.patch.object(pytest.device._bitalino, 'read')
     pytest.device._bitalino.read.return_value = read_data
     sampling_rate = pytest.device.get_sampling_rate()
     if (read_data != None):

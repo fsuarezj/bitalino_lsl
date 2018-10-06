@@ -10,9 +10,10 @@ def data():
 
 @pytest.mark.no_exc
 @pytest.mark.mock_test
-def test_my_bitalino(mock, data):
-    mock.patch.object(bitalino, 'BITalino')
+@pytest.mark.este_test
+def test_my_bitalino(mocker, data):
+    mocker.patch.object(bitalino, 'BITalino')
     pytest.device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
     device = bitalino_lsl.BitalinoLSL(pytest.mac_address)
-    mock.patch.object(pytest.device._bitalino, 'close')
+    mocker.patch.object(pytest.device._bitalino, 'close')
     device.close()

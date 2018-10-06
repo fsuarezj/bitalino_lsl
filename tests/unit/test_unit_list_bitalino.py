@@ -8,8 +8,8 @@ def is_mac_address(mac_address):
 
 @pytest.mark.no_exc
 @pytest.mark.mock_test
-def test_list_bitalino1(mock):
-    mock.patch.object(bitalino, 'find')
+def test_list_bitalino1(mocker):
+    mocker.patch.object(bitalino, 'find')
     bitalino.find.return_value = [['12:23:34:FF:A1:B2', 'BITalino_A1B2']]
     devices = bitalino_lsl.list_bitalino()
     assert type(devices) == dict
@@ -22,8 +22,8 @@ def test_list_bitalino1(mock):
 
 @pytest.mark.no_exc
 @pytest.mark.mock_test
-def test_list_bitalino1(mock):
-    mock.patch.object(bitalino, 'find')
+def test_list_bitalino1(mocker):
+    mocker.patch.object(bitalino, 'find')
     bitalino.find.return_value = [['12:23:34:FF:A1:B2', 'BITalino_A1B2'], ['54:34:F1:A2:41:E2', 'BITalino_41E2']]
     devices = bitalino_lsl.list_bitalino()
     assert type(devices) == dict
