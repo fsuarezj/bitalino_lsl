@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'BITalino-lsl'
+project = 'BITalino_lsl'
 copyright = '2018, Fernando Suárez Jiménez'
 author = 'Fernando Suárez Jiménez'
 
@@ -41,11 +41,7 @@ release = '0.0.3'
 extensions = [
     'sphinx.ext.autodoc',
 ]
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
-
-# The suffix(es) of source filenames.
+-
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
@@ -115,7 +111,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'BITalino-lsldoc'
+htmlhelp_basename = 'BITalino_lsldoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -142,7 +138,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'BITalino-lsl.tex', 'BITalino-lsl Documentation',
+    (master_doc, 'BITalino_lsl.tex', 'BITalino_lsl Documentation',
      'Fernando Suárez Jiménez', 'manual'),
 ]
 
@@ -152,7 +148,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'bitalino-lsl', 'BITalino-lsl Documentation',
+    (master_doc, 'bitalino_lsl', 'BITalino_lsl Documentation',
      [author], 1)
 ]
 
@@ -163,8 +159,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'BITalino-lsl', 'BITalino-lsl Documentation',
-     author, 'BITalino-lsl', 'One line description of project.',
+    (master_doc, 'BITalino_lsl', 'BITalino_lsl Documentation',
+     author, 'BITalino_lsl', 'One line description of project.',
      'Miscellaneous'),
 ]
 

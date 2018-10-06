@@ -54,7 +54,7 @@ device.close()
 ~~~
 
 ## Documentation
-Documentation is available [here](http://readthedocs.org/fsuarezj/bitalino_lsl)
+Documentation is available [here](https://bitalino-lsl.readthedocs.io)
 
 ## License
 This project is licensed under the [GNU GPL v3](LICENSE.md)
