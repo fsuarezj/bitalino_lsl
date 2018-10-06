@@ -1,6 +1,6 @@
 # BITalino-lsl
 
-A python module called `bitalino-lsl` to stream BITalino data though the Lab Streaming Layer (LSL). This module gets data from the [BITalino](www.bitalino.com) device through the [bitalino python api](https://github.com/BITalinoWorld/revolution-python-api) and uses the [Lab Stream Layer](https://github.com/sccn/labstreaminglayer) to stream the data.
+A python module called `bitalino_lsl` to stream BITalino data though the Lab Streaming Layer (LSL). This module gets data from the [BITalino](www.bitalino.com) device through the [bitalino python api](https://github.com/BITalinoWorld/revolution-python-api) and uses the [Lab Stream Layer](https://github.com/sccn/labstreaminglayer) to stream the data.
 
 The module should work with python versions >= 2.7 although it has only been tested for:
 * Python 2.7.15
@@ -54,7 +54,7 @@ device.close()
 ~~~
 
 ## Documentation
-Documentation is available [here](myurl.com)
+Documentation is available [here](http://readthedocs.org/fsuarezj/bitalino_lsl)
 
 ## License
 This project is licensed under the [GNU GPL v3](LICENSE.md)
