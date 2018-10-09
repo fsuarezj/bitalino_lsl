@@ -16,7 +16,7 @@ import sys
 
 _TIMEOUT = 0.2
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def data():
     pytest.logger = logging.getLogger()
     log_level = logging.INFO
