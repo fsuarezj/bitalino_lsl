@@ -35,9 +35,10 @@ class BitaReader(threading.Thread):
             #TODO: Catch exception for read
             try:
                 data = self._bitalino.read(self._N_SAMPLES)
-                chunk = list(data)
+                # Analog Start from 5th Index
+                chunk = list(data[:, 5:])
                 for i in chunk:
-                    SharedResources.queue.put((chunk.pop(0)[1:len(self._channels_keys)+1], self._timestamp))
+                    SharedResources.queue.put((chunk.pop(0), self._timestamp))
                     self._timestamp += 1.0/self._sampling_rate
             except Exception as vf:
                 SharedResources.logger.debug("BAD READ: {data}".format(data = data))
