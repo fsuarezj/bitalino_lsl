@@ -242,6 +242,8 @@ class BitalinoLSL(object):
             SharedResources.exc_info = None
             SharedResources.logger.debug("{th_id}: raising exception".format(th_id = th_id))
             raise_(temp_exc_info[0], temp_exc_info[1], temp_exc_info[2])
+        # Stop Bitalino
+        self._bitalino.stop()
 
     def raise_exception(self, e):
         """Raises exceptions that occurred in the reading and streaming threads
