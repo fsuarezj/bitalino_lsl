@@ -6,6 +6,7 @@ from pylsl import StreamInlet, resolve_stream
 import time
 import logging
 import sys
+import numpy as np
 
 ## Marks are:
 ## dev_test: test used for developing purposes
@@ -68,12 +69,14 @@ def run_around_tests(capsys):
 def stream_test(mocker, channels, read_data = [], segs = 1):
     """Main function to test the stream with several channels and data"""
     # Creates the mock read_data
-    if (read_data == []):
-        read_data = [[0] for i in range(10)]
-        for i in channels:
-            sample = random.sample(range(1024), len(read_data))
-            for j in range(len(read_data)):
-                read_data[j].append(sample[j])
+    if (not isinstance(read_data, np.ndarray)):
+        if (read_data == []):
+            read_data = [[0,0,0,0,0] for i in range(10)]
+            for i in channels:
+                sample = random.sample(range(1024), len(read_data))
+                for j in range(len(read_data)):
+                    read_data[j].append(sample[j])
+            read_data = np.array(read_data)
 
     # Init device
     mocker.patch.object(bitalino, 'BITalino')
@@ -83,9 +86,9 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
     mocker.patch.object(pytest.device._bitalino, 'read')
     pytest.device._bitalino.read.return_value = read_data
     sampling_rate = pytest.device.get_sampling_rate()
-    if (read_data != None):
+    if (isinstance(read_data, np.ndarray)):
         pytest.device._set_n_samples(len(read_data))
-        stream_data = list(map(lambda x: x[1:], read_data))
+        stream_data = list(map(lambda x: x[5:], read_data))
         # transpose
         stream_data = [list(i) for i in zip(*stream_data)]
 
@@ -123,7 +126,7 @@ def stream_test(mocker, channels, read_data = [], segs = 1):
 def test_stream_2e_2s(data, capsys, mocker):
     """Testing integration with pylsl with two mocked electrodes and two samples"""
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5'}
-    read_data = [[0,1,69], [0,2,70]]
+    read_data = np.array([[0,0,0,0,0,1,69], [0,0,0,0,0,2,70]])
     with capsys.disabled():
         stream_test(mocker, channels, read_data)
 
@@ -132,7 +135,7 @@ def test_stream_2e_2s(data, capsys, mocker):
 def test_stream_1e_4s(data, capsys, mocker):
     """Testing integration with pylsl with one mocked electrode and four samples"""
     channels = {0: 'Fp1-Fp2'}
-    read_data = [[0,3], [0,4], [0,5], [0,6]]
+    read_data = np.array([[0,0,0,0,0,3], [0,0,0,0,0,4], [0,0,0,0,0,5], [0,0,0,0,0,6]])
     with capsys.disabled():
         stream_test(mocker, channels, read_data, segs = 3)
 
@@ -174,7 +177,7 @@ def test_stream_bad_data(data, capsys, mocker):
     """Testing integration with pylsl launching bad data exception"""
     #channels = [0,2,5]
     channels = {0: 'Fp1-Fp2', 1: 'T3-T5', 2: 'F7-F3'}
-    read_data = [[0,3], [0,4], [0,5], [0,6]]
+    read_data = np.array([[0,0,0,0,0,3], [0,0,0,0,0,4], [0,0,0,0,0,5], [0,0,0,0,0,6]])
     with capsys.disabled():
         with pytest.raises(Exception) as excinfo:
             stream_test(mocker, channels, read_data, segs=5)
@@ -182,6 +185,7 @@ def test_stream_bad_data(data, capsys, mocker):
 
 @pytest.mark.exc_test
 @pytest.mark.mock_test
+@pytest.mark.none_stream
 def test_stream_bad_reading(data, capsys, mocker):
     """Testing integration with pylsl launching bad data exception"""
     #channels = [0,2,5]

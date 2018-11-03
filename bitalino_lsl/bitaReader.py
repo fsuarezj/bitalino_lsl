@@ -1,6 +1,7 @@
 import threading
 import time
 import bitalino_lsl
+import numpy as np
 from .sharedResources import SharedResources
 
 class BitaReader(threading.Thread):
@@ -36,7 +37,10 @@ class BitaReader(threading.Thread):
             try:
                 data = self._bitalino.read(self._N_SAMPLES)
                 # Analog Start from 5th Index
-                chunk = list(data[:, 5:])
+                if (isinstance(data, np.ndarray)):
+                    chunk = list(data[:, 5:])
+                else:
+                    chunk = data
                 for i in chunk:
                     SharedResources.queue.put((chunk.pop(0), self._timestamp))
                     self._timestamp += 1.0/self._sampling_rate

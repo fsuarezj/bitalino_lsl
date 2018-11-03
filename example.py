@@ -3,7 +3,7 @@ from pylsl import StreamInlet, resolve_stream
 import time
 
 # MAC address of the BITalino device
-MAC_ADDRESS_BITALINO_DEVICE = "20:17:09:18:60:36"
+MAC_ADDRESS_BITALINO_DEVICE = "20:17:11:20:51:60"
 
 # List with channels of the BITalino device to be streamed to the LSL
 # This channels can be specified as a list or as a dictionary with their
@@ -29,7 +29,7 @@ inlet = StreamInlet(resolve_stream('type', 'EEG')[0])
 t_end = time.time() + 5
 while time.time() < t_end:
   sample, timestamp = inlet.pull_sample()
-  print(sample)
+  #print(sample)
 
 # Stop the device
 device.stop()
