@@ -4,5 +4,5 @@ iso8601==0.1.12
 numpy==1.15.2
 PyBluez==0.22
 pylsl==1.12.2
-PyYAML==3.13
+PyYAML==5.4
 serial==0.0.69
