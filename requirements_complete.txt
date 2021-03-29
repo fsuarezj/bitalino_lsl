@@ -24,7 +24,7 @@ pluggy==0.7.1
 py==1.6.0
 PyBluez==0.22
 pycparser==2.19
-Pygments==2.2.0
+Pygments==2.7.4
 pylsl==1.12.2
 pyparsing==2.2.2
 pytest==3.7.4
