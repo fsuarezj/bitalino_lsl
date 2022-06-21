@@ -1,7 +1,7 @@
 bitalino==1.2.1
 future==0.16.0
 iso8601==0.1.12
-numpy==1.15.2
+numpy==1.22.0
 PyBluez==0.22
 pylsl==1.12.2
 PyYAML==3.13
